@@ -70,3 +70,13 @@ Form Input → Gemini AI Analysis → Code Processing → Google Sheets Storage
 ## Author
 
 Rupesh Nagireddy
+
+## Workflow Screenshot
+
+![Workflow](workflow.png)
+
+---
+
+## Google Sheets Output
+
+![Google Sheets](sheets.png)
