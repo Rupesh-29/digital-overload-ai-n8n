@@ -1,0 +1,328 @@
+{
+  "name": "Digital Overload AI Analyzer",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Digital Overload AI Analyzer",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name"
+            },
+            {
+              "fieldLabel": "Daily Tasks"
+            },
+            {
+              "fieldLabel": "Notifications"
+            },
+            {
+              "fieldLabel": "Assignments"
+            },
+            {
+              "fieldLabel": "Personal Commitments"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d5301669-15b5-450a-8bb7-9bbe0841f88e",
+      "name": "On form submission",
+      "webhookId": "30cc4a3e-e693-4334-801b-9bf4c042fe17"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Digital Overload AI Analyzer.\n\nAnalyze the student's daily workload and identify:\n1. Overload level\n2. Excessive context switching\n3. Unrealistic planning\n4. Main distractions\n5. Important priorities\n\nThen provide:\n- Overload Score\n- Main Problem\n- Top Priorities\n- Suggested Schedule\n- Focus Tip\n\nStudent Details:\n\nName: {{$json[\"Name\"]}}\n\nDaily Tasks:\n{{$json[\"Daily Tasks\"]}}\n\nNotifications:\n{{$json[\"Notifications\"]}}\n\nAssignments:\n{{$json[\"Assignments\"]}}\n\nPersonal Commitments:\n{{$json[\"Personal Commitments\"]}}\n\nReturn output ONLY as valid JSON.\n\nDo not use markdown.\nDo not use explanation outside JSON.\n\nUse exactly this JSON structure:\n\n{\n  \"overload_score\": \"\",\n  \"burnout_risk\": \"\",\n  \"main_problem\": \"\",\n  \"priority_tasks\": [],\n  \"can_delay\": [],\n  \"suggested_schedule\": \"\",\n  \"focus_tip\": \"\",\n  \"confidence_score\": \"\"\n}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        208,
+        0
+      ],
+      "id": "3dde0551-a757-4960-92a2-9839638ba622",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        160,
+        192
+      ],
+      "id": "e60dc748-3ca6-4e67-a4f0-7ead46c81327",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "UdrVKKA03Jm0Ns05",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawResponse = $json.text;\n\nconst cleanedResponse = rawResponse\n  .replace(/```json/g, '')\n  .replace(/```/g, '')\n  .trim();\n\nconst parsedData = JSON.parse(cleanedResponse);\n\nreturn [\n{\njson: {\noverloadScore: parsedData.overload_score,\nburnoutRisk: parsedData.burnout_risk,\nmainProblem: parsedData.main_problem,\npriorityTasks: parsedData.priority_tasks.join(\", \"),\ncanDelay: parsedData.can_delay.join(\", \"),\nsuggestedSchedule: parsedData.suggested_schedule,\nfocusTip: parsedData.focus_tip,\nconfidenceScore: parsedData.confidence_score\n}\n}\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "a053a679-e898-4a4d-a931-e34721b6de5a",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/16BXSZIDJWZlV0DBBXQY-Oap3CRchIyOMzailMHUTK_w/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{$node[\"On form submission\"].json[\"Name\"]}}",
+            "Daily Tasks": "={{$node[\"On form submission\"].json[\"Daily Tasks\"]}}",
+            "Notification": "={{$node[\"On form submission\"].json[\"Notifications\"]}}",
+            "Assignments": "={{$node[\"On form submission\"].json[\"Assignments\"]}}",
+            "Personal Commitments": "={{$node[\"On form submission\"].json[\"Personal Commitments\"]}}",
+            "Overload Score": "={{$json[\"overloadScore\"]}}",
+            "Main Problem": "={{$json[\"mainProblem\"]}}",
+            "Suggested Schedule": "={{$json[\"suggestedSchedule\"]}}",
+            "Focus Tip": "={{$json[\"focusTip\"]}}",
+            "Burnout Risk": "={{$json[\"burnoutRisk\"]}}",
+            "Priority Tasks": "={{$json[\"priorityTasks\"]}}",
+            "Can Delay": "={{$json[\"canDelay\"]}}",
+            "Confidence Score": "={{$json[\"confidenceScore\"]}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Daily Tasks",
+              "displayName": "Daily Tasks",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Notification",
+              "displayName": "Notification",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Assignments",
+              "displayName": "Assignments",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Personal Commitments",
+              "displayName": "Personal Commitments",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Overload Score",
+              "displayName": "Overload Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Burnout Risk",
+              "displayName": "Burnout Risk",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Main Problem",
+              "displayName": "Main Problem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Priority Tasks",
+              "displayName": "Priority Tasks",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Can Delay",
+              "displayName": "Can Delay",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Suggested Schedule",
+              "displayName": "Suggested Schedule",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Focus Tip",
+              "displayName": "Focus Tip",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Confidence Score",
+              "displayName": "Confidence Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        768,
+        0
+      ],
+      "id": "e4ea6485-5078-4a59-b678-d96092fbbae9",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "a6N6PS4nthgTznDe",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0250ea35-2528-4b7c-99d6-21ced1c75605",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8cf46de6e786a1dde05997a6ebb6dea685de8608eb7410101e8a111abfa7fec7"
+  },
+  "id": "o5ebp5p4D1swwsuf",
+  "tags": []
+}
